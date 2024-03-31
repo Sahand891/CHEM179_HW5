@@ -47,7 +47,17 @@ int main() {
 
     // For HO
     arma::mat HO_S_deriv = S_deriv(final_HO_itdata);
-    HO_S_deriv.print();
+    //HO_S_deriv.print();
+
+
+    arma::mat H2_gamma_deriv = gamma_deriv(final_H2_itdata);
+    //H2_gamma_deriv.print();
+
+    arma::mat HF_gamma_deriv = gamma_deriv(final_HF_itdata);
+    //HF_gamma_deriv.print();
+
+    arma::mat HO_gamma_deriv = gamma_deriv(final_HO_itdata);
+    //HO_gamma_deriv.print();
 
     return 0;
 }

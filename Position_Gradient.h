@@ -17,4 +17,6 @@
 
 arma::mat S_deriv(const iteration_data &conv_it_data);
 
+arma::mat gamma_deriv(const iteration_data &conv_it_data);
+
 #endif //HW5_POSITION_GRADIENT_H

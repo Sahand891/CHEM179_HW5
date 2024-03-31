@@ -211,7 +211,7 @@ double zero_zero_integral(Atom A, Atom B, int k, int k_prime, int l, int l_prime
         final_val = U_A * U_B * sqrt(1.0 / d) * erf(sqrt(T));
     }
 
-    return 27.211*final_val; // convert gamma elements to eV from atomic units
+    return 27.2114079527*final_val; // convert gamma elements to eV from atomic units
 
 }
 
