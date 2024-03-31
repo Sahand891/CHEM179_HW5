@@ -56,7 +56,7 @@ arma::mat S_deriv(const iteration_data &conv_it_data) {
     std::vector<Atom> atoms = conv_it_data.atoms;
     std::vector<AO> AOs = conv_it_data.AOs;
 
-    // Initialize appropriately sized matrix - each row is a dimension for a certain atom, and each column is an AO
+    // Initialize appropriately sized matrix - each row is a dimension, and each column is an AO-AO pair (e.g. 1sA-1sA 1sA-1sB 1sB-1sA 1sB-1sB for H2)
     arma::mat final_mat(3, pow(AOs.size(),2), arma::fill::zeros);
 
     for (size_t i = 0; i < final_mat.n_rows; i++) { // iterate through directions x, y, z
@@ -149,7 +149,7 @@ arma::mat gamma_deriv(const iteration_data &conv_it_data) {
 
     std::vector<Atom> atoms = conv_it_data.atoms;
 
-    // Initialize appropriately sized matrix - each row is a dimension for a certain atom, and each column is an AO
+    // Initialize appropriately sized matrix - each row is a dimension, each column an atom-atom pair (e.g. AA, AB, BA, BB, for H2 case)
     arma::mat final_mat(3, pow(atoms.size(),2), arma::fill::zeros);
 
     for (size_t i = 0; i < final_mat.n_rows; i++) { // iterate through directions x, y, z
@@ -171,18 +171,31 @@ arma::mat gamma_deriv(const iteration_data &conv_it_data) {
 
 
 
-
-
-
-
-
-
 // Nuclear Repulsion Derivative
 
-double calc_V_nuc_deriv() {
+// Derivative with respect to atom A
+double V_nuc_deriv_one_element(Atom &A, std::vector<Atom> &atoms, int direction) {
 
+    double sum=0;
+    for (auto& atom : atoms) {
 
-    return 0;
+        double term1 = A.Z_*atom.Z_;
+        double term2 = (A.X - atom.X);
+        if (direction == 1) {
+            term2 = (A.Y - atom.Y);
+        } else if (direction == 2) {
+            term2 = (A.Z - atom.Z);
+        }
+
+        // if atom=A, ignore!
+        if (arma::norm((A.pos_vec - atom.pos_vec)) == 0) {
+            sum += 0;
+        } else {
+            sum += -term1*term2 / pow(arma::norm((A.pos_vec - atom.pos_vec)), 3);
+        }
+    }
+
+    return sum * 27.2114079527; // Hartree to eV conversion
 }
 
 
@@ -193,6 +206,141 @@ arma::mat V_nuc_deriv(const iteration_data &conv_it_data) {
     // Initialize appropriately sized matrix - each row is a dimension, each column is an atom
     arma::mat final_mat(3, atoms.size(), arma::fill::zeros);
 
+    for (size_t i = 0; i < 3; i++) {
+        int col_index=0;
+        for (auto& atom : atoms) {
+            final_mat(i,col_index) = V_nuc_deriv_one_element(atom, atoms, i);
+            col_index += 1;
+        }
+    }
+
 
     return final_mat;
+}
+
+
+
+
+// Creating energy gradient
+
+
+double x_uv(int u, int v, const iteration_data &conv_it_data) {
+    // u, v indicate AO indices
+
+    double beta_A = conv_it_data.AOs[u].origin_atom.beta;
+    double beta_B = conv_it_data.AOs[v].origin_atom.beta;
+    double P_uv_tot = conv_it_data.P_alpha_new(u,v) + conv_it_data.P_beta_new(u,v);
+
+    return (beta_A+beta_B)*P_uv_tot;
+
+
+}
+
+arma::mat x_mat(const iteration_data &conv_it_data) {
+
+    std::vector<AO> AOs = conv_it_data.AOs;
+
+    arma::mat final_mat(AOs.size(),AOs.size(),arma::fill::zeros);
+
+    for (int u=0; u < AOs.size(); u++) {
+        for (int v=0; v < AOs.size(); v++) {
+            final_mat(u,v) = x_uv(u,v,conv_it_data);
+        }
+    }
+
+    return final_mat;
+}
+
+
+double y_ab(int a, int b, const iteration_data &conv_it_data) {
+    // a, b indicate atom indices
+
+    std::vector<Atom> atoms = conv_it_data.atoms;
+
+    Atom atomA = atoms[a];
+    Atom atomB = atoms[b];
+
+    double P_AA_tot = conv_it_data.P_total_new[a]; // P_total is an armadillo vector
+    double P_BB_tot = conv_it_data.P_total_new[b];
+
+    // Calculating the tricky summation term
+    arma::mat P_alpha = conv_it_data.P_alpha_new;
+    arma::mat P_beta = conv_it_data.P_beta_new;
+
+    // Determining the AO indices associated with each atom
+    std::vector<int> a_AO_indices = obtain_AO_indices_of_atom(a, atoms);
+    std::vector<int> b_AO_indices = obtain_AO_indices_of_atom(b, atoms);
+
+    double summation_term = 0;
+    for (auto& u : a_AO_indices) {
+        for (auto& v : b_AO_indices) {
+            summation_term += P_alpha(u,v)*P_alpha(u,v) + P_beta(u,v)*P_beta(u,v);
+        }
+    }
+
+    return P_AA_tot*P_BB_tot - atomB.Z_*P_AA_tot - atomA.Z_*P_BB_tot - summation_term;
+
+}
+
+arma::mat y_mat(const iteration_data &conv_it_data) {
+
+    std::vector<Atom> atoms = conv_it_data.atoms;
+
+    arma::mat final_mat(atoms.size(),atoms.size(),arma::fill::zeros);
+
+    for (int a=0; a < atoms.size(); a++) {
+        for (int b=0; b < atoms.size(); b++) {
+            final_mat(a,b) = y_ab(a,b,conv_it_data);
+        }
+    }
+
+    return final_mat;
+}
+
+
+// We take the gradient with respect to a certain atom's position! That atom is the atom at the deriv_atom_index
+double electron_gradient_x(const iteration_data &conv_it_data, int deriv_atom_index, int direction) {
+
+    arma::mat x = x_mat(conv_it_data);
+    arma::mat y = y_mat(conv_it_data);
+
+    //x.print();
+    //y.print();
+
+    std::vector<Atom> atoms = conv_it_data.atoms;
+    std::vector<AO> AOs = conv_it_data.AOs;
+
+    Atom deriv_atom = atoms[deriv_atom_index];
+
+    double overlap_sum = 0;
+    // Had to implement these nested for loops in special way to avoid double counting (adding both 01 and 10, which cancel!)
+    for (int u=0; u < AOs.size(); u++) {
+        for (int v=u; v < AOs.size(); v++) {
+            // Check if the AOs are the same—if so, don't calculate anything
+            //std::cout << u << v << std::endl;
+            if (u == v) {
+                overlap_sum += 0;
+            } else {
+                overlap_sum += x(u,v)*S_deriv_one_element(AOs[u], AOs[v], direction);
+                //std::cout << x(u,v)*S_deriv_one_element(AOs[u], AOs[v], direction) << std::endl;
+            }
+            //std::cout << overlap_sum << std::endl;
+        }
+    }
+
+    double gamma_sum=0;
+    for (int a=0; a < atoms.size(); a++) {
+        for (int b=a; b < atoms.size(); b++) {
+            // Check if the atoms are the same—if so, don't calculate anything
+            if (a == b) {
+                gamma_sum += 0;
+            } else {
+                gamma_sum += y(a,b)*gamma_deriv_one_element(atoms[a], atoms[b], direction);
+            }
+        }
+    }
+
+
+    return overlap_sum+gamma_sum;
+
 }

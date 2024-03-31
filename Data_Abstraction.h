@@ -61,6 +61,10 @@ struct Atom {
 
     // position vector
     arma::vec pos_vec = {X,Y,Z};
+
+    // number of atomic orbitals on this atom
+    int num_AOs = cGTOs.size();
+
 };
 
 
@@ -83,6 +87,8 @@ std::vector<AO> atoms_to_AOs(const std::vector<Atom> &Atoms);
 int count_total_electrons(const std::vector<Atom> &Atoms);
 int count_alpha_electrons(const std::vector<Atom> &Atoms);
 int count_beta_electrons(const std::vector<Atom> &Atoms);
+
+std::vector<int> obtain_AO_indices_of_atom(int atom_index, std::vector<Atom> &atoms);
 
 
 

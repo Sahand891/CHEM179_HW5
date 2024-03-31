@@ -274,4 +274,34 @@ std::vector<Atom> read_atoms_from_file(const std::string &path) {
 
 
 
+std::vector<int> obtain_AO_indices_of_atom(int atom_index, std::vector<Atom> &atoms) {
+
+    //int total_AOs = atoms_to_AOs(atoms).size();
+
+    int i=0; // to go through atom indices
+    int AO_index_counter=0; // to go through AO indices
+    for (auto& atom : atoms) {
+        if (i == atom_index) { // if you've arrived at the atom of interest
+            if (atom.A == 1) {
+                std::vector<int> indices = {AO_index_counter};
+                return indices;
+            } else { // have a C, N, O, or F atom
+                std::vector<int> indices = {AO_index_counter,AO_index_counter+1,AO_index_counter+2,AO_index_counter+3};
+                return indices;
+            }
+        } else { // if you're not yet at the atom of interest (keep going through the atoms)
+            if (atom.A == 1) {
+                AO_index_counter += 1;
+            } else { // we're at a C, N, O, or F atom
+                AO_index_counter += 4;
+            }
+            i += 1;
+        }
+    }
+
+
+
+}
+
+
 
