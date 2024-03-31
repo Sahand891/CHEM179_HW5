@@ -78,9 +78,9 @@ int main() {
 
     //electron_gradient(final_H2_itdata).print();
 
-    std::cout << electron_gradient_x(final_HO_itdata,1,0) << std::endl;
+    //std::cout << electron_gradient_x(final_H2_itdata,0,0) << std::endl;
 
-    //final_HF_itdata.P_alpha_new.print();
+    total_gradient_mat(final_H2_itdata).print();
 
     return 0;
 }

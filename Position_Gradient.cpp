@@ -311,11 +311,12 @@ double electron_gradient_x(const iteration_data &conv_it_data, int deriv_atom_in
     std::vector<AO> AOs = conv_it_data.AOs;
 
     Atom deriv_atom = atoms[deriv_atom_index];
+    std::vector<int> AOs_indices_deriv_atom = obtain_AO_indices_of_atom(deriv_atom_index, atoms);
 
     double overlap_sum = 0;
     // Had to implement these nested for loops in special way to avoid double counting (adding both 01 and 10, which cancel!)
-    for (int u=0; u < AOs.size(); u++) {
-        for (int v=u; v < AOs.size(); v++) {
+    for (auto& u : AOs_indices_deriv_atom) {
+        for (int v=0; v < AOs.size(); v++) {
             // Check if the AOs are the same—if so, don't calculate anything
             //std::cout << u << v << std::endl;
             if (u == v) {
@@ -328,19 +329,40 @@ double electron_gradient_x(const iteration_data &conv_it_data, int deriv_atom_in
         }
     }
 
+
     double gamma_sum=0;
-    for (int a=0; a < atoms.size(); a++) {
-        for (int b=a; b < atoms.size(); b++) {
-            // Check if the atoms are the same—if so, don't calculate anything
-            if (a == b) {
-                gamma_sum += 0;
-            } else {
-                gamma_sum += y(a,b)*gamma_deriv_one_element(atoms[a], atoms[b], direction);
-            }
+    for (int b=0; b < atoms.size(); b++) {
+        // Check if the atom we're on is the same as the atom we're deriving with respect to—if so, don't calculate anything
+        if (deriv_atom_index == b) {
+            gamma_sum += 0;
+        } else {
+            gamma_sum += y(deriv_atom_index,b)*gamma_deriv_one_element(deriv_atom, atoms[b], direction);
         }
     }
 
 
     return overlap_sum+gamma_sum;
 
+}
+
+arma::mat electron_gradient_mat(const iteration_data &conv_it_data) {
+
+    std::vector<Atom> atoms = conv_it_data.atoms;
+
+    // Initialize appropriately sized matrix - rows are x,y,z, 1 column per atom (each column gives gradient of atom position)
+    arma::mat final_mat(3, atoms.size(), arma::fill::zeros);
+
+    for (int j=0; j < final_mat.n_cols; j++) {
+        for (int i=0; i < final_mat.n_rows; i++) { // go through directions first
+            final_mat(i,j) = electron_gradient_x(conv_it_data, j, i);
+        }
+    }
+
+    return final_mat;
+
+}
+
+
+arma::mat total_gradient_mat(const iteration_data &conv_it_data) {
+    return electron_gradient_mat(conv_it_data) + V_nuc_deriv(conv_it_data);
 }

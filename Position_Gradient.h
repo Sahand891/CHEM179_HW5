@@ -26,5 +26,11 @@ arma::mat x_mat(const iteration_data &conv_it_data);
 arma::mat y_mat(const iteration_data &conv_it_data);
 
 double electron_gradient_x(const iteration_data &conv_it_data, int deriv_atom_index, int direction);
+arma::mat electron_gradient_mat(const iteration_data &conv_it_data);
+
+arma::mat total_gradient_mat(const iteration_data &conv_it_data);
+
+
+void write_gradient_to_file(const iteration_data &conv_it_data);
 
 #endif //HW5_POSITION_GRADIENT_H
