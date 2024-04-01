@@ -16,7 +16,9 @@ add_executable(HW5
         Utils.h
         main.cpp
         Position_Gradient.cpp
-        Position_Gradient.h)
+        Position_Gradient.h
+        Finite_Differences.cpp
+        Finite_Differences.h)
 
 include_directories(/Users/sahandadibnia/armadillo-12.6.7/include)
 

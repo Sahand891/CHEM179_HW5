@@ -340,9 +340,7 @@ double electron_gradient_x(const iteration_data &conv_it_data, int deriv_atom_in
         }
     }
 
-
     return overlap_sum+gamma_sum;
-
 }
 
 arma::mat electron_gradient_mat(const iteration_data &conv_it_data) {
@@ -365,4 +363,34 @@ arma::mat electron_gradient_mat(const iteration_data &conv_it_data) {
 
 arma::mat total_gradient_mat(const iteration_data &conv_it_data) {
     return electron_gradient_mat(conv_it_data) + V_nuc_deriv(conv_it_data);
+}
+
+
+
+
+void write_gradient_to_file(const iteration_data &conv_it_data, std::string output_location) {
+
+    std::ofstream outFile(output_location);
+
+    // Check if the file is successfully opened
+    if (!outFile.is_open()) {
+        std::cerr << "Error opening the file!" << std::endl;
+    }
+
+    outFile << "Nuclear Repulsion Energy: " << nuc_repl_energy(conv_it_data.atoms) << " eV" << std::endl;
+    outFile << "Electron Energy: " << electron_energy(conv_it_data.fock_alpha, conv_it_data.fock_beta, conv_it_data.P_alpha_new, conv_it_data.P_beta_new, conv_it_data.H_core) << " eV" << std::endl;
+    outFile << "Total Energy: " << compute_total_energy(conv_it_data) << " eV" << std::endl;
+    outFile << "Suv_RA (Overlap gradient)" << std::endl;
+    S_deriv(conv_it_data).print(outFile);
+    outFile << "gammaAB_RA (Gamma gradient)" << std::endl;
+    gamma_deriv(conv_it_data).print(outFile);
+    outFile << "Vnuc_RA (Nuclear repulsion gradient)" << std::endl;
+    V_nuc_deriv(conv_it_data).print(outFile);
+    outFile << "Electronic gradient" << std::endl;
+    electron_gradient_mat(conv_it_data).print(outFile);
+    outFile << "Total Gradient" << std::endl;
+    total_gradient_mat(conv_it_data).print(outFile);
+
+    outFile.close();
+
 }

@@ -41,14 +41,14 @@ double nuc_repl_energy(const std::vector<Atom> &atoms) {
             }
         }
     }
-    return sum * 27.211 / 2; // multiply by eV/a.u. ratio, divide by 2 to eliminate double counting
+    return sum * 27.2114079527 / 2; // multiply by eV/a.u. ratio, divide by 2 to eliminate double counting
 }
 
 
 // Calculate electron energy from converged density and Fock matrices
 double electron_energy(const arma::mat &F_alpha, const arma::mat &F_beta, const arma::mat &P_alpha, const arma::mat &P_beta, const arma::mat &H_core) {
 
-    int matrix_length = sqrt(F_alpha.size());
+    int matrix_length = F_alpha.n_rows;
 
     // Iterating through indices of the matrices
     double alpha_term=0, beta_term=0;

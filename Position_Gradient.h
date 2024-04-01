@@ -31,6 +31,6 @@ arma::mat electron_gradient_mat(const iteration_data &conv_it_data);
 arma::mat total_gradient_mat(const iteration_data &conv_it_data);
 
 
-void write_gradient_to_file(const iteration_data &conv_it_data);
+void write_gradient_to_file(const iteration_data &conv_it_data, std::string output_location);
 
 #endif //HW5_POSITION_GRADIENT_H

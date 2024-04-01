@@ -1,0 +1,23 @@
+Nuclear Repulsion Energy: 110.744 eV
+Electron Energy: -873.152 eV
+Total Energy: -762.408 eV
+Suv_RA (Overlap gradient)
+        0   0.3571  -0.1807        0        0  -0.3571        0        0        0        0   0.1807        0        0        0        0        0        0        0        0        0        0        0        0        0        0
+        0        0        0   0.2044        0        0        0        0        0        0        0        0        0        0        0  -0.2044        0        0        0        0        0        0        0        0        0
+        0        0        0        0   0.2044        0        0        0        0        0        0        0        0        0        0        0        0        0        0        0  -0.2044        0        0        0        0
+gammaAB_RA (Gamma gradient)
+        0   5.7692  -5.7692        0
+        0        0        0        0
+        0        0        0        0
+Vnuc_RA (Nuclear repulsion gradient)
+   64.3861  -64.3861
+         0         0
+         0         0
+Electronic gradient
+  -58.0501   58.0501
+         0         0
+         0         0
+Total Gradient
+   6.3360  -6.3360
+        0        0
+        0        0
