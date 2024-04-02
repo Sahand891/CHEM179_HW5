@@ -278,7 +278,11 @@ double y_ab(int a, int b, const iteration_data &conv_it_data) {
         }
     }
 
-    return P_AA_tot*P_BB_tot - atomB.Z_*P_AA_tot - atomA.Z_*P_BB_tot - summation_term;
+    // Xiao's version
+     return P_AA_tot*P_BB_tot - atomB.Z_*P_AA_tot - atomA.Z_*P_BB_tot - summation_term;
+
+    // My version - from my own derivation - spoiler alert, it's wrong lol
+    //return 0.5*(P_AA_tot*P_BB_tot - 2*atomB.Z_*P_AA_tot - summation_term);
 
 }
 
